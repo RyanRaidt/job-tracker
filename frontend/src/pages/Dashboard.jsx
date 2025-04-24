@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaPlus,
   FaSearch,
@@ -8,6 +8,8 @@ import {
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaChartLine,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import {
   Box,
@@ -41,6 +43,8 @@ function Dashboard() {
   const { colorMode } = useColorMode();
   const cardBg = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     data: jobs,
@@ -57,6 +61,25 @@ function Dashboard() {
       return response.data;
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      await axios.delete(`http://localhost:3000/api/jobs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["jobs"]);
+    },
+  });
+
+  const handleDelete = (id, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      window.confirm("Are you sure you want to delete this job application?")
+    ) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const filteredJobs = jobs?.filter(
     (job) =>
@@ -104,11 +127,6 @@ function Dashboard() {
     <Container maxW="container.xl" py={8}>
       <Flex justify="space-between" align="center" mb={8}>
         <Heading size="lg">Job Applications</Heading>
-        <Link to="/jobs/new">
-          <Button leftIcon={<Icon as={FaPlus} />} colorScheme="brand">
-            Add Job
-          </Button>
-        </Link>
       </Flex>
 
       <Grid
@@ -234,6 +252,28 @@ function Dashboard() {
                     </Text>
                   </Flex>
                 </Box>
+                <Flex justify="end" mt={4} gap={2}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="brand"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate(`/jobs/${job.id}/edit`);
+                    }}
+                  >
+                    <Icon as={FaEdit} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    colorScheme="red"
+                    onClick={(e) => handleDelete(job.id, e)}
+                  >
+                    <Icon as={FaTrash} />
+                  </Button>
+                </Flex>
               </CardBody>
             </Card>
           </Link>

@@ -2,12 +2,36 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { FaArrowLeft, FaSave, FaTimes } from "react-icons/fa";
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Textarea,
+  Button,
+  Icon,
+  Spinner,
+  Grid,
+  GridItem,
+  useColorMode,
+  Card,
+  CardBody,
+  Stack,
+  Divider,
+} from "@chakra-ui/react";
 import axios from "axios";
 
 function JobForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
+  const { colorMode } = useColorMode();
+  const cardBg = colorMode === "light" ? "white" : "gray.800";
+  const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
 
   const [formData, setFormData] = useState({
     company: "",
@@ -60,147 +84,140 @@ function JobForm() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
+      <Flex justify="center" align="center" minH="60vh">
+        <Spinner size="xl" color="brand.500" />
+      </Flex>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in">
-      <div className="flex items-center space-x-4 mb-6">
-        <button
+    <Container maxW="container.xl" py={8}>
+      <Flex align="center" mb={6}>
+        <Button
+          leftIcon={<Icon as={FaArrowLeft} />}
+          variant="ghost"
           onClick={() => navigate("/")}
-          className="text-gray-600 hover:text-primary-600 transition-colors"
+          mr={4}
         >
-          <FaArrowLeft className="text-xl" />
-        </button>
-        <h1 className="page-title">
+          Back
+        </Button>
+        <Heading size="lg">
           {isEditing ? "Edit Job Application" : "Add Job Application"}
-        </h1>
-      </div>
+        </Heading>
+      </Flex>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="form-group">
-            <label htmlFor="company" className="form-label">
-              Company
-            </label>
-            <input
-              type="text"
-              id="company"
-              name="company"
-              required
-              className="input"
-              value={formData.company}
-              onChange={handleChange}
-              placeholder="Enter company name"
-            />
-          </div>
+      <Card bg={cardBg} border="1px" borderColor={borderColor}>
+        <CardBody>
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={6}>
+              <Grid
+                templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+                gap={6}
+              >
+                <GridItem>
+                  <FormControl isRequired>
+                    <FormLabel>Company</FormLabel>
+                    <Input
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      placeholder="Enter company name"
+                    />
+                  </FormControl>
+                </GridItem>
 
-          <div className="form-group">
-            <label htmlFor="position" className="form-label">
-              Position
-            </label>
-            <input
-              type="text"
-              id="position"
-              name="position"
-              required
-              className="input"
-              value={formData.position}
-              onChange={handleChange}
-              placeholder="Enter job position"
-            />
-          </div>
-        </div>
+                <GridItem>
+                  <FormControl isRequired>
+                    <FormLabel>Position</FormLabel>
+                    <Input
+                      name="position"
+                      value={formData.position}
+                      onChange={handleChange}
+                      placeholder="Enter job position"
+                    />
+                  </FormControl>
+                </GridItem>
+              </Grid>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="form-group">
-            <label htmlFor="location" className="form-label">
-              Location
-            </label>
-            <input
-              type="text"
-              id="location"
-              name="location"
-              className="input"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="Enter job location"
-            />
-          </div>
+              <Grid
+                templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+                gap={6}
+              >
+                <GridItem>
+                  <FormControl>
+                    <FormLabel>Location</FormLabel>
+                    <Input
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      placeholder="Enter job location"
+                    />
+                  </FormControl>
+                </GridItem>
 
-          <div className="form-group">
-            <label htmlFor="status" className="form-label">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              className="input"
-              value={formData.status}
-              onChange={handleChange}
-            >
-              <option value="applied">Applied</option>
-              <option value="interview">Interview</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-        </div>
+                <GridItem>
+                  <FormControl>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                    >
+                      <option value="applied">Applied</option>
+                      <option value="interview">Interview</option>
+                      <option value="rejected">Rejected</option>
+                    </Select>
+                  </FormControl>
+                </GridItem>
+              </Grid>
 
-        <div className="form-group">
-          <label htmlFor="url" className="form-label">
-            Job URL
-          </label>
-          <input
-            type="url"
-            id="url"
-            name="url"
-            className="input"
-            value={formData.url}
-            onChange={handleChange}
-            placeholder="Enter job posting URL"
-          />
-        </div>
+              <FormControl>
+                <FormLabel>Job URL</FormLabel>
+                <Input
+                  type="url"
+                  name="url"
+                  value={formData.url}
+                  onChange={handleChange}
+                  placeholder="Enter job posting URL"
+                />
+              </FormControl>
 
-        <div className="form-group">
-          <label htmlFor="notes" className="form-label">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows="4"
-            className="input"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Add any additional notes about the application"
-          />
-        </div>
+              <FormControl>
+                <FormLabel>Notes</FormLabel>
+                <Textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  placeholder="Add any additional notes about the application"
+                  rows={4}
+                />
+              </FormControl>
 
-        <div className="flex justify-end space-x-4 pt-4 border-t">
-          <button
-            type="button"
-            className="btn btn-secondary flex items-center space-x-2"
-            onClick={() => navigate("/")}
-          >
-            <FaTimes />
-            <span>Cancel</span>
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary flex items-center space-x-2"
-            disabled={mutation.isPending}
-          >
-            <FaSave />
-            <span>
-              {mutation.isPending ? "Saving..." : isEditing ? "Update" : "Save"}
-            </span>
-          </button>
-        </div>
-      </form>
-    </div>
+              <Divider />
+
+              <Flex justify="end" gap={4}>
+                <Button
+                  leftIcon={<Icon as={FaTimes} />}
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  leftIcon={<Icon as={FaSave} />}
+                  colorScheme="brand"
+                  type="submit"
+                  isLoading={mutation.isPending}
+                  loadingText="Saving..."
+                >
+                  {isEditing ? "Update" : "Save"}
+                </Button>
+              </Flex>
+            </Stack>
+          </form>
+        </CardBody>
+      </Card>
+    </Container>
   );
 }
 

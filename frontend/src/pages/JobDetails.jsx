@@ -9,12 +9,33 @@ import {
   FaLink,
   FaStickyNote,
 } from "react-icons/fa";
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Icon,
+  Badge,
+  Spinner,
+  Alert,
+  AlertIcon,
+  Card,
+  CardBody,
+  Stack,
+  Divider,
+  useColorMode,
+} from "@chakra-ui/react";
 import axios from "axios";
 
 function JobDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const { colorMode } = useColorMode();
+  const cardBg = colorMode === "light" ? "white" : "gray.800";
+  const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
 
   const {
     data: job,
@@ -38,135 +59,172 @@ function JobDetails() {
     },
   });
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "applied":
+        return "blue";
+      case "interview":
+        return "yellow";
+      case "rejected":
+        return "red";
+      default:
+        return "gray";
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      </div>
+      <Flex justify="center" align="center" minH="60vh">
+        <Spinner size="xl" color="brand.500" />
+      </Flex>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-danger-600 p-4 bg-danger-50 rounded-lg">
-        Error: {error.message}
-      </div>
+      <Container maxW="container.xl" py={8}>
+        <Alert status="error" borderRadius="md">
+          <AlertIcon />
+          Error: {error.message}
+        </Alert>
+      </Container>
     );
   }
 
   if (!job) {
     return (
-      <div className="text-center text-gray-600 p-4 bg-gray-50 rounded-lg">
-        Job not found
-      </div>
+      <Container maxW="container.xl" py={8}>
+        <Alert status="info" borderRadius="md">
+          <AlertIcon />
+          Job not found
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-fade-in">
-      <div className="flex items-center space-x-4 mb-6">
-        <button
+    <Container maxW="container.xl" py={8}>
+      <Flex align="center" mb={6}>
+        <Button
+          leftIcon={<Icon as={FaArrowLeft} />}
+          variant="ghost"
           onClick={() => navigate("/")}
-          className="text-gray-600 hover:text-primary-600 transition-colors"
+          mr={4}
         >
-          <FaArrowLeft className="text-xl" />
-        </button>
-        <h1 className="page-title">Job Details</h1>
-      </div>
+          Back
+        </Button>
+        <Heading size="lg">Job Details</Heading>
+      </Flex>
 
-      <div className="card space-y-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {job.position}
-            </h2>
-            <p className="text-lg text-gray-600">{job.company}</p>
-          </div>
-          <span
-            className={`status-badge ${
-              job.status === "applied"
-                ? "status-badge-applied"
-                : job.status === "interview"
-                ? "status-badge-interview"
-                : "status-badge-rejected"
-            }`}
-          >
-            {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex items-center space-x-3">
-            <FaMapMarkerAlt className="text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Location</p>
-              <p className="text-gray-900">{job.location || "Not specified"}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <FaCalendarAlt className="text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Applied Date</p>
-              <p className="text-gray-900">
-                {new Date(job.appliedDate).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {job.url && (
-          <div className="flex items-start space-x-3">
-            <FaLink className="text-gray-400 mt-1" />
-            <div>
-              <p className="text-sm text-gray-500">Job URL</p>
-              <a
-                href={job.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 hover:text-primary-700 break-all"
+      <Card bg={cardBg} border="1px" borderColor={borderColor}>
+        <CardBody>
+          <Stack spacing={6}>
+            <Flex justify="space-between" align="start">
+              <Box>
+                <Heading size="lg" mb={2}>
+                  {job.position}
+                </Heading>
+                <Text fontSize="xl" color="gray.600">
+                  {job.company}
+                </Text>
+              </Box>
+              <Badge
+                colorScheme={getStatusColor(job.status)}
+                variant="subtle"
+                px={3}
+                py={1}
+                borderRadius="full"
+                fontSize="md"
               >
-                {job.url}
-              </a>
-            </div>
-          </div>
-        )}
+                {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+              </Badge>
+            </Flex>
 
-        {job.notes && (
-          <div className="flex items-start space-x-3">
-            <FaStickyNote className="text-gray-400 mt-1" />
-            <div>
-              <p className="text-sm text-gray-500">Notes</p>
-              <p className="text-gray-900 whitespace-pre-wrap">{job.notes}</p>
-            </div>
-          </div>
-        )}
+            <Flex direction={{ base: "column", md: "row" }} gap={6}>
+              <Flex align="center" flex={1}>
+                <Icon as={FaMapMarkerAlt} color="gray.400" mr={3} />
+                <Box>
+                  <Text fontSize="sm" color="gray.500">
+                    Location
+                  </Text>
+                  <Text>{job.location || "Not specified"}</Text>
+                </Box>
+              </Flex>
+              <Flex align="center" flex={1}>
+                <Icon as={FaCalendarAlt} color="gray.400" mr={3} />
+                <Box>
+                  <Text fontSize="sm" color="gray.500">
+                    Applied Date
+                  </Text>
+                  <Text>{new Date(job.appliedDate).toLocaleDateString()}</Text>
+                </Box>
+              </Flex>
+            </Flex>
 
-        <div className="flex justify-end space-x-4 pt-6 border-t">
-          <button
-            onClick={() => navigate(`/jobs/${id}/edit`)}
-            className="btn btn-secondary flex items-center space-x-2"
-          >
-            <FaEdit />
-            <span>Edit</span>
-          </button>
-          <button
-            onClick={() => {
-              if (
-                window.confirm(
-                  "Are you sure you want to delete this job application?"
-                )
-              ) {
-                deleteMutation.mutate();
-              }
-            }}
-            className="btn btn-danger flex items-center space-x-2"
-          >
-            <FaTrash />
-            <span>Delete</span>
-          </button>
-        </div>
-      </div>
-    </div>
+            {job.url && (
+              <Flex align="start">
+                <Icon as={FaLink} color="gray.400" mt={1} mr={3} />
+                <Box>
+                  <Text fontSize="sm" color="gray.500">
+                    Job URL
+                  </Text>
+                  <Text
+                    as="a"
+                    href={job.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    color="brand.500"
+                    _hover={{ color: "brand.600" }}
+                    wordBreak="break-all"
+                  >
+                    {job.url}
+                  </Text>
+                </Box>
+              </Flex>
+            )}
+
+            {job.notes && (
+              <Flex align="start">
+                <Icon as={FaStickyNote} color="gray.400" mt={1} mr={3} />
+                <Box>
+                  <Text fontSize="sm" color="gray.500">
+                    Notes
+                  </Text>
+                  <Text whiteSpace="pre-wrap">{job.notes}</Text>
+                </Box>
+              </Flex>
+            )}
+
+            <Divider />
+
+            <Flex justify="end" gap={4}>
+              <Button
+                leftIcon={<Icon as={FaEdit} />}
+                variant="outline"
+                onClick={() => navigate(`/jobs/${id}/edit`)}
+              >
+                Edit
+              </Button>
+              <Button
+                leftIcon={<Icon as={FaTrash} />}
+                colorScheme="red"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to delete this job application?"
+                    )
+                  ) {
+                    deleteMutation.mutate();
+                  }
+                }}
+              >
+                Delete
+              </Button>
+            </Flex>
+          </Stack>
+        </CardBody>
+      </Card>
+    </Container>
   );
 }
 

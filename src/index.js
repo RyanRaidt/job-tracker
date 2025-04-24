@@ -47,6 +47,24 @@ app.get("/api/jobs", async (req, res, next) => {
   }
 });
 
+// Get a single job application
+app.get("/api/jobs/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const job = await prisma.jobApplication.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    res.json(job);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Create new job application
 app.post("/api/jobs", validateJobApplication, async (req, res, next) => {
   try {
