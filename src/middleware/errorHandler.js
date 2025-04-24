@@ -1,5 +1,10 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  console.error("Error details:", {
+    message: err.message,
+    stack: err.stack,
+    name: err.name,
+    code: err.code,
+  });
 
   // Handle Prisma errors
   if (err.code?.startsWith("P")) {
@@ -32,6 +37,14 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Handle Passport errors
+  if (err.name === "AuthenticationError") {
+    return res.status(401).json({
+      error: "Authentication error",
+      details: err.message,
+    });
+  }
+
   // Default error
   res.status(500).json({
     error: "Internal server error",
@@ -39,6 +52,7 @@ const errorHandler = (err, req, res, next) => {
       process.env.NODE_ENV === "development"
         ? err.message
         : "Something went wrong",
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 };
 

@@ -5,6 +5,9 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import JobForm from "./pages/JobForm";
 import JobDetails from "./pages/JobDetails";
+import Login from "./pages/Login";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const theme = extendTheme({
   colors: {
@@ -76,20 +79,59 @@ const theme = extendTheme({
 
 const queryClient = new QueryClient();
 
+// Create router with future flags
+const router = {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  },
+};
+
 function App() {
   return (
     <>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <ChakraProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
-          <Router>
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/jobs/new" element={<JobForm />} />
-              <Route path="/jobs/:id" element={<JobDetails />} />
-              <Route path="/jobs/:id/edit" element={<JobForm />} />
-            </Routes>
+          <Router {...router}>
+            <AuthProvider>
+              <Navbar />
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs/new"
+                  element={
+                    <ProtectedRoute>
+                      <JobForm />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs/:id"
+                  element={
+                    <ProtectedRoute>
+                      <JobDetails />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/jobs/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <JobForm />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </AuthProvider>
           </Router>
         </QueryClientProvider>
       </ChakraProvider>

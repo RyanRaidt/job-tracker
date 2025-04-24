@@ -11,22 +11,31 @@ const {
   validateLinkedInUrl,
 } = require("./middleware/validation");
 const { linkedInLimiter } = require("./middleware/rateLimiter");
+const bcrypt = require("bcrypt");
+const passport = require("passport");
 
 const app = express();
 const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Frontend URL
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Configure authentication
 const { isAuthenticated } = configureAuth(app);
 
 // Get all job applications
-app.get("/api/jobs", async (req, res, next) => {
+app.get("/api/jobs", isAuthenticated, async (req, res, next) => {
   try {
     const { status, sortBy } = req.query;
-    let where = {};
+    let where = {
+      userId: req.user.id, // Only get jobs for the current user
+    };
     let orderBy = {};
 
     if (status) {
@@ -48,7 +57,7 @@ app.get("/api/jobs", async (req, res, next) => {
 });
 
 // Get a single job application
-app.get("/api/jobs/:id", async (req, res, next) => {
+app.get("/api/jobs/:id", isAuthenticated, async (req, res, next) => {
   try {
     const { id } = req.params;
     const job = await prisma.jobApplication.findUnique({
@@ -66,37 +75,87 @@ app.get("/api/jobs/:id", async (req, res, next) => {
 });
 
 // Create new job application
-app.post("/api/jobs", validateJobApplication, async (req, res, next) => {
-  try {
-    const jobData = req.body;
-    const job = await prisma.jobApplication.create({
-      data: jobData,
-    });
-    res.json(job);
-  } catch (error) {
-    next(error);
+app.post(
+  "/api/jobs",
+  isAuthenticated,
+  validateJobApplication,
+  async (req, res, next) => {
+    try {
+      const jobData = {
+        ...req.body,
+        userId: req.user.id, // Add the user ID to the job data
+      };
+
+      const job = await prisma.jobApplication.create({
+        data: jobData,
+      });
+      res.json(job);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Update job application
-app.put("/api/jobs/:id", validateJobApplication, async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const jobData = req.body;
-    const job = await prisma.jobApplication.update({
-      where: { id: parseInt(id) },
-      data: jobData,
-    });
-    res.json(job);
-  } catch (error) {
-    next(error);
+app.put(
+  "/api/jobs/:id",
+  isAuthenticated,
+  validateJobApplication,
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      // First check if the job exists and belongs to the user
+      const existingJob = await prisma.jobApplication.findUnique({
+        where: { id: parseInt(id) },
+      });
+
+      if (!existingJob) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      if (existingJob.userId !== req.user.id) {
+        return res
+          .status(403)
+          .json({ error: "Not authorized to update this job" });
+      }
+
+      const jobData = {
+        ...req.body,
+        userId: req.user.id, // Ensure userId is set
+      };
+
+      const job = await prisma.jobApplication.update({
+        where: { id: parseInt(id) },
+        data: jobData,
+      });
+      res.json(job);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Delete job application
-app.delete("/api/jobs/:id", async (req, res, next) => {
+app.delete("/api/jobs/:id", isAuthenticated, async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // First check if the job exists and belongs to the user
+    const existingJob = await prisma.jobApplication.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!existingJob) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    if (existingJob.userId !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this job" });
+    }
+
     await prisma.jobApplication.delete({
       where: { id: parseInt(id) },
     });
@@ -149,11 +208,82 @@ app.post(
   }
 );
 
+// Register new user
+app.post("/api/auth/register", async (req, res, next) => {
+  try {
+    const { email, password, name } = req.body;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+      },
+    });
+
+    // Log in the user
+    req.login(user, (err) => {
+      if (err) {
+        return next(err);
+      }
+      res.json({ message: "Registration successful", user });
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Login
+app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
+  res.json({ message: "Login successful", user: req.user });
+});
+
 // Check authentication status
-app.get("/api/auth/status", (req, res) => {
-  res.json({
-    authenticated: req.isAuthenticated(),
-    user: req.isAuthenticated() ? req.user : null,
+app.get("/api/auth/status", (req, res, next) => {
+  try {
+    if (!req.session) {
+      throw new Error("Session not initialized");
+    }
+
+    const isAuthenticated = req.isAuthenticated();
+    const user = isAuthenticated
+      ? {
+          id: req.user.id,
+          email: req.user.email,
+          name: req.user.name,
+        }
+      : null;
+
+    res.json({
+      authenticated: isAuthenticated,
+      user,
+    });
+  } catch (error) {
+    console.error("Auth status error:", error);
+    next(error);
+  }
+});
+
+// Logout
+app.post("/api/auth/logout", (req, res, next) => {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.json({ message: "Logged out successfully" });
   });
 });
 

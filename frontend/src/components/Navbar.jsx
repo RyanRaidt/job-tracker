@@ -1,5 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { FaBriefcase, FaChartLine, FaPlus } from "react-icons/fa";
+import {
+  FaBriefcase,
+  FaChartLine,
+  FaPlus,
+  FaSun,
+  FaMoon,
+  FaSignOutAlt,
+} from "react-icons/fa";
 import {
   Box,
   Flex,
@@ -8,11 +15,14 @@ import {
   Icon,
   Text,
   useColorMode,
+  IconButton,
 } from "@chakra-ui/react";
+import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const location = useLocation();
-  const { colorMode } = useColorMode();
+  const { colorMode, toggleColorMode } = useColorMode();
+  const { user, logout } = useAuth();
   const bgColor = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
 
@@ -23,12 +33,14 @@ function Navbar() {
   return (
     <Box
       as="nav"
-      bg={bgColor}
-      borderBottom="1px"
-      borderColor={borderColor}
       position="sticky"
       top={0}
       zIndex={10}
+      bg={bgColor}
+      borderBottom="1px"
+      borderColor={borderColor}
+      px={4}
+      py={2}
     >
       <Container maxW="container.xl">
         <Flex h={16} alignItems="center" justifyContent="space-between">
@@ -61,6 +73,28 @@ function Navbar() {
                 Add Job
               </Button>
             </Link>
+            <IconButton
+              icon={colorMode === "light" ? <FaMoon /> : <FaSun />}
+              onClick={toggleColorMode}
+              variant="ghost"
+              aria-label="Toggle color mode"
+            />
+            {user ? (
+              <Button
+                leftIcon={<FaSignOutAlt />}
+                variant="ghost"
+                onClick={logout}
+              >
+                Sign Out
+              </Button>
+            ) : (
+              <Button
+                colorScheme="brand"
+                onClick={() => (window.location.href = "/login")}
+              >
+                Sign In
+              </Button>
+            )}
           </Flex>
         </Flex>
       </Container>

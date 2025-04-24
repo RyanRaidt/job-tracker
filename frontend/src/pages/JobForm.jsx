@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FaArrowLeft, FaSave, FaTimes } from "react-icons/fa";
 import {
   Box,
@@ -22,6 +22,7 @@ import {
   CardBody,
   Stack,
   Divider,
+  useToast,
 } from "@chakra-ui/react";
 import api from "../api";
 
@@ -32,6 +33,8 @@ function JobForm() {
   const { colorMode } = useColorMode();
   const cardBg = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     company: "",
@@ -57,6 +60,8 @@ function JobForm() {
     }
   }, [job]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const mutation = useMutation({
     mutationFn: async (data) => {
       if (isEditing) {
@@ -64,13 +69,39 @@ function JobForm() {
       }
       return api.post("/api/jobs", data);
     },
-    onSuccess: () => {
-      navigate("/");
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["jobs"]);
+
+      toast({
+        title: isEditing
+          ? "Job updated successfully"
+          : "Job created successfully",
+        status: "success",
+        duration: 3000,
+      });
+
+      setIsSubmitting(true);
+    },
+    onError: (error) => {
+      setIsSubmitting(false);
+      toast({
+        title: "Error",
+        description: error.response?.data?.error || "An error occurred",
+        status: "error",
+        duration: 5000,
+      });
     },
   });
 
+  useEffect(() => {
+    if (isSubmitting) {
+      navigate("/");
+    }
+  }, [isSubmitting, navigate]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     mutation.mutate(formData);
   };
 
@@ -207,8 +238,9 @@ function JobForm() {
                   leftIcon={<Icon as={FaSave} />}
                   colorScheme="brand"
                   type="submit"
-                  isLoading={mutation.isPending}
+                  isLoading={isSubmitting}
                   loadingText="Saving..."
+                  disabled={isSubmitting}
                 >
                   {isEditing ? "Update" : "Save"}
                 </Button>
