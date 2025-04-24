@@ -9,21 +9,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
   const checkAuthStatus = async () => {
     try {
       const response = await api.get("/api/auth/status");
+      console.log("Auth status response:", response.data);
       setUser(response.data.user);
+      return response.data.user;
     } catch (error) {
       console.error("Auth status check failed:", error);
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   const login = () => {
     window.location.href = "/auth/linkedin";
@@ -43,7 +46,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, logout, checkAuthStatus }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -21,7 +21,7 @@ import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const { login: linkedInLogin } = useAuth();
+  const { login: linkedInLogin, checkAuthStatus } = useAuth();
   const { colorMode } = useColorMode();
   const cardBg = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
@@ -43,14 +43,6 @@ function Login() {
     }
   }, [isSubmitting, navigate]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -65,7 +57,7 @@ function Login() {
             status: "success",
             duration: 3000,
           });
-          setIsSubmitting(true);
+          await checkAuthStatus(); // Check auth status after registration
         }
       } else {
         const response = await api.post("/api/auth/login", formData);
@@ -75,13 +67,21 @@ function Login() {
             status: "success",
             duration: 3000,
           });
-          setIsSubmitting(true);
+          await checkAuthStatus(); // Check auth status after login
         }
       }
     } catch (error) {
       setIsSubmitting(false);
       setError(error.response?.data?.error || "An error occurred");
     }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
