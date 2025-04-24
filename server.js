@@ -11,13 +11,9 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-    credentials: true,
+    origin: "https://ryan-job-trackers.netlify.app",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Access-Control-Allow-Private-Network"],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
   })
 );
 
