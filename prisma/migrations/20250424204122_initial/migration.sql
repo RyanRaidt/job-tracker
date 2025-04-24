@@ -1,3 +1,6 @@
+-- Drop existing table if it exists
+DROP TABLE IF EXISTS "JobApplication";
+
 -- CreateTable
 CREATE TABLE "JobApplication" (
     "id" SERIAL NOT NULL,
