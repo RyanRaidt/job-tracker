@@ -20,7 +20,9 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Frontend URL
+    origin: process.env.CORS_ORIGIN
+      ? `https://${process.env.CORS_ORIGIN}`
+      : "https://ryan-job-trackers.netlify.app",
     credentials: true,
   })
 );
