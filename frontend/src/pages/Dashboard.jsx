@@ -62,16 +62,28 @@ function Dashboard() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await api.delete(`/api/jobs/${id}`);
+      if (!id) {
+        throw new Error("ID is required for deletion");
+      }
+      const response = await api.delete(`/api/jobs/${id}`);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["jobs"]);
+    },
+    onError: (error) => {
+      console.error("Delete error:", error);
+      alert("Failed to delete job application. Please try again.");
     },
   });
 
   const handleDelete = (id, e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!id) {
+      alert("Invalid job ID");
+      return;
+    }
     if (
       window.confirm("Are you sure you want to delete this job application?")
     ) {
