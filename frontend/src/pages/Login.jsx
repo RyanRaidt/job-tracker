@@ -58,19 +58,25 @@ function Login() {
 
     try {
       if (isRegistering) {
-        await api.post("/api/auth/register", formData);
-        toast({
-          title: "Registration successful",
-          status: "success",
-          duration: 3000,
-        });
+        const response = await api.post("/api/auth/register", formData);
+        if (response.data.user) {
+          toast({
+            title: "Registration successful",
+            status: "success",
+            duration: 3000,
+          });
+          setIsSubmitting(true);
+        }
       } else {
-        await api.post("/api/auth/login", formData);
-        toast({
-          title: "Login successful",
-          status: "success",
-          duration: 3000,
-        });
+        const response = await api.post("/api/auth/login", formData);
+        if (response.data.user) {
+          toast({
+            title: "Login successful",
+            status: "success",
+            duration: 3000,
+          });
+          setIsSubmitting(true);
+        }
       }
     } catch (error) {
       setIsSubmitting(false);

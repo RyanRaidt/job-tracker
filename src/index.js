@@ -250,7 +250,18 @@ app.post("/api/auth/register", async (req, res, next) => {
 
 // Login
 app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
-  res.json({ message: "Login successful", user: req.user });
+  // Set session cookie options
+  req.session.cookie.secure = process.env.NODE_ENV === "production";
+  req.session.cookie.sameSite = "lax";
+
+  res.json({
+    message: "Login successful",
+    user: {
+      id: req.user.id,
+      email: req.user.email,
+      name: req.user.name,
+    },
+  });
 });
 
 // Check authentication status
