@@ -32,7 +32,7 @@ const configureAuth = (app) => {
         sameSite: "none",
         httpOnly: true,
         path: "/",
-        domain: ".onrender.com", // Allow cookies to work across subdomains
+        domain: "job-tracker-backend-vbji.onrender.com", // Use the full domain
       },
     })
   );

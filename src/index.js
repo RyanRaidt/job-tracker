@@ -28,6 +28,7 @@ app.use(
     exposedHeaders: ["set-cookie"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
+    maxAge: 86400, // 24 hours
   })
 );
 app.use(express.json());
