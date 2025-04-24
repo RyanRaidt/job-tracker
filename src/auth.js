@@ -24,8 +24,8 @@ const configureAuth = (app) => {
         createTableIfMissing: true,
       }),
       secret: process.env.SESSION_SECRET || "dev-secret",
-      resave: false,
-      saveUninitialized: false,
+      resave: true,
+      saveUninitialized: true,
       cookie: {
         secure: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -33,6 +33,7 @@ const configureAuth = (app) => {
         httpOnly: true,
         path: "/",
       },
+      name: "connect.sid", // Explicitly set the cookie name
     })
   );
 

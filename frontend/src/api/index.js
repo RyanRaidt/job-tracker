@@ -7,10 +7,21 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Important for session cookies
+  withCredentials: true,
   xsrfCookieName: "XSRF-TOKEN",
   xsrfHeaderName: "X-XSRF-TOKEN",
 });
+
+// Add request interceptor to include credentials
+api.interceptors.request.use(
+  (config) => {
+    config.withCredentials = true;
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor to handle errors
 api.interceptors.response.use(
