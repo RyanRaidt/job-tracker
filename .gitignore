@@ -5,9 +5,12 @@ yarn-debug.log
 yarn-error.log
 
 # Environment variables
+# cursor: allow .env
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
 
 # IDE
 .vscode/
