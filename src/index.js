@@ -9,6 +9,7 @@ const errorHandler = require("./middleware/errorHandler");
 const {
   validateJobApplication,
   validateLinkedInUrl,
+  validateRegistration,
 } = require("./middleware/validation");
 const { linkedInLimiter } = require("./middleware/rateLimiter");
 const bcrypt = require("bcrypt");
