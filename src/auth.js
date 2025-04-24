@@ -23,16 +23,12 @@ const configureAuth = (app) => {
         tableName: "session",
         createTableIfMissing: true,
       }),
-      secret: process.env.SESSION_SECRET || "dev-secret",
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: "lax",
-        httpOnly: true,
-        domain:
-          process.env.NODE_ENV === "production" ? ".onrender.com" : undefined,
+        sameSite: "none",
       },
     })
   );

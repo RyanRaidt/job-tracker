@@ -20,10 +20,11 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN
-      ? `https://${process.env.CORS_ORIGIN}`
-      : "https://ryan-job-trackers.netlify.app",
+    origin: "https://ryan-job-trackers.netlify.app",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["set-cookie"],
   })
 );
 app.use(express.json());
@@ -250,9 +251,8 @@ app.post("/api/auth/register", async (req, res, next) => {
 
 // Login
 app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
-  // Set session cookie options
-  req.session.cookie.secure = process.env.NODE_ENV === "production";
-  req.session.cookie.sameSite = "lax";
+  console.log("Login successful, user:", req.user);
+  console.log("Session:", req.session);
 
   res.json({
     message: "Login successful",
@@ -267,9 +267,10 @@ app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
 // Check authentication status
 app.get("/api/auth/status", (req, res, next) => {
   try {
-    if (!req.session) {
-      throw new Error("Session not initialized");
-    }
+    console.log("Checking auth status");
+    console.log("Session:", req.session);
+    console.log("User:", req.user);
+    console.log("Is authenticated:", req.isAuthenticated());
 
     const isAuthenticated = req.isAuthenticated();
     const user = isAuthenticated
