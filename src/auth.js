@@ -30,6 +30,9 @@ const configureAuth = (app) => {
         secure: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         sameSite: "none",
+        httpOnly: true,
+        path: "/",
+        domain: ".onrender.com", // Allow cookies to work across subdomains
       },
     })
   );

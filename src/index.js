@@ -23,8 +23,10 @@ app.use(
     origin: "https://ryan-job-trackers.netlify.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
     exposedHeaders: ["set-cookie"],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 app.use(express.json());
@@ -212,9 +214,10 @@ app.post(
 );
 
 // Register new user
-app.post("/api/auth/register", async (req, res, next) => {
+app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
   try {
     const { email, password, name } = req.body;
+    console.log("Registration attempt:", { email, name }); // Don't log password
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -222,6 +225,7 @@ app.post("/api/auth/register", async (req, res, next) => {
     });
 
     if (existingUser) {
+      console.log("User already exists:", email);
       return res.status(400).json({ error: "Email already registered" });
     }
 
@@ -237,14 +241,28 @@ app.post("/api/auth/register", async (req, res, next) => {
       },
     });
 
+    console.log("User created successfully:", {
+      id: user.id,
+      email: user.email,
+    });
+
     // Log in the user
     req.login(user, (err) => {
       if (err) {
+        console.error("Login after registration failed:", err);
         return next(err);
       }
-      res.json({ message: "Registration successful", user });
+      res.json({
+        message: "Registration successful",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      });
     });
   } catch (error) {
+    console.error("Registration error:", error);
     next(error);
   }
 });

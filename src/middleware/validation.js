@@ -42,7 +42,39 @@ const validateLinkedInUrl = (req, res, next) => {
   next();
 };
 
+const validateRegistration = (req, res, next) => {
+  console.log("Validating registration data:", req.body);
+  const { email, password, name } = req.body;
+  const errors = [];
+
+  if (!email) {
+    errors.push("Email is required");
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.push("Invalid email format");
+  }
+
+  if (!password) {
+    errors.push("Password is required");
+  } else if (password.length < 6) {
+    errors.push("Password must be at least 6 characters long");
+  }
+
+  if (!name) {
+    errors.push("Name is required");
+  }
+
+  if (errors.length > 0) {
+    console.log("Validation errors:", errors);
+    const error = new Error(errors.join(", "));
+    error.name = "ValidationError";
+    return next(error);
+  }
+
+  next();
+};
+
 module.exports = {
   validateJobApplication,
   validateLinkedInUrl,
+  validateRegistration,
 };
