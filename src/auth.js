@@ -1,14 +1,29 @@
 const passport = require("passport");
 const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 const session = require("express-session");
+const pgSession = require("connect-pg-simple")(session);
+const { Pool } = require("pg");
 
 const configureAuth = (app) => {
+  // Create a new pool using the same connection string
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
   // Session configuration
   app.use(
     session({
+      store: new pgSession({
+        pool,
+        tableName: "session",
+      }),
       secret: process.env.SESSION_SECRET || "dev-secret",
       resave: false,
       saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      },
     })
   );
 
