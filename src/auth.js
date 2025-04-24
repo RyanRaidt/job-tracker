@@ -32,7 +32,6 @@ const configureAuth = (app) => {
         sameSite: "none",
         httpOnly: true,
         path: "/",
-        domain: "job-tracker-backend-vbji.onrender.com", // Use the full domain
       },
     })
   );

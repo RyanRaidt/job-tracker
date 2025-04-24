@@ -24,7 +24,7 @@ app.use(
     origin: "https://ryan-job-trackers.netlify.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
     exposedHeaders: ["set-cookie"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -273,6 +273,8 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
 app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
   console.log("Login successful, user:", req.user);
   console.log("Session:", req.session);
+  console.log("Session ID:", req.sessionID);
+  console.log("Cookies:", req.headers.cookie);
 
   res.json({
     message: "Login successful",
@@ -289,6 +291,8 @@ app.get("/api/auth/status", (req, res, next) => {
   try {
     console.log("Checking auth status");
     console.log("Session:", req.session);
+    console.log("Session ID:", req.sessionID);
+    console.log("Cookies:", req.headers.cookie);
     console.log("User:", req.user);
     console.log("Is authenticated:", req.isAuthenticated());
 
