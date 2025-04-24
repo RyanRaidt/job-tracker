@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
-const configureAuth = require("./src/auth");
 const errorHandler = require("./src/middleware/errorHandler");
 
 const app = express();
@@ -21,9 +20,6 @@ app.use(
     optionsSuccessStatus: 204,
   })
 );
-
-// Configure authentication
-const { isAuthenticated } = configureAuth(app);
 
 // Routes
 app.get("/api/jobs", async (req, res, next) => {
