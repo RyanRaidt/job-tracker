@@ -23,7 +23,7 @@ import {
   Stack,
   Divider,
 } from "@chakra-ui/react";
-import axios from "axios";
+import api from "../api";
 
 function JobForm() {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ function JobForm() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job", id],
     queryFn: async () => {
-      const response = await axios.get(`http://localhost:3000/api/jobs/${id}`);
+      const response = await api.get(`/api/jobs/${id}`);
       return response.data;
     },
     enabled: isEditing,
@@ -60,9 +60,9 @@ function JobForm() {
   const mutation = useMutation({
     mutationFn: async (data) => {
       if (isEditing) {
-        return axios.put(`http://localhost:3000/api/jobs/${id}`, data);
+        return api.put(`/api/jobs/${id}`, data);
       }
-      return axios.post("http://localhost:3000/api/jobs", data);
+      return api.post("/api/jobs", data);
     },
     onSuccess: () => {
       navigate("/");

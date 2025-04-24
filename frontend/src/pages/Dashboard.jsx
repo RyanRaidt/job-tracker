@@ -35,7 +35,7 @@ import {
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
-import axios from "axios";
+import api from "../api";
 
 function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("");
@@ -53,10 +53,8 @@ function Dashboard() {
   } = useQuery({
     queryKey: ["jobs", statusFilter],
     queryFn: async () => {
-      const response = await axios.get(
-        `http://localhost:3000/api/jobs${
-          statusFilter ? `?status=${statusFilter}` : ""
-        }`
+      const response = await api.get(
+        `/api/jobs${statusFilter ? `?status=${statusFilter}` : ""}`
       );
       return response.data;
     },
@@ -64,7 +62,7 @@ function Dashboard() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await axios.delete(`http://localhost:3000/api/jobs/${id}`);
+      await api.delete(`/api/jobs/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["jobs"]);

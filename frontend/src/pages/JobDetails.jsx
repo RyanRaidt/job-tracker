@@ -27,7 +27,7 @@ import {
   Divider,
   useColorMode,
 } from "@chakra-ui/react";
-import axios from "axios";
+import api from "../api";
 
 function JobDetails() {
   const navigate = useNavigate();
@@ -44,14 +44,14 @@ function JobDetails() {
   } = useQuery({
     queryKey: ["job", id],
     queryFn: async () => {
-      const response = await axios.get(`http://localhost:3000/api/jobs/${id}`);
+      const response = await api.get(`/api/jobs/${id}`);
       return response.data;
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await axios.delete(`http://localhost:3000/api/jobs/${id}`);
+      await api.delete(`/api/jobs/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries(["jobs"]);
