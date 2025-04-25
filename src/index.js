@@ -18,21 +18,19 @@ const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 
 // CORS configuration
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? [process.env.CORS_ORIGIN]
-  : [
-      "https://ryan-job-trackers.netlify.app",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ];
+const allowedOrigins = [
+  "https://ryan-job-trackers.netlify.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error("CORS Not Allowed: " + origin));
       }
     },
     credentials: true,
@@ -42,7 +40,8 @@ app.use(
     maxAge: 86400,
   })
 );
-app.use(express.json());
+
+
 
 // Configure authentication
 const { isAuthenticated } = configureAuth(app);
