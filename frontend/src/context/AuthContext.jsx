@@ -14,8 +14,12 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await api.get("/api/auth/status", {
-        withCredentials: true, // ✅ Critical to send session cookie
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
 
       console.log("Auth status response:", response.data);
 
