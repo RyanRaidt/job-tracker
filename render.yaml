@@ -11,7 +11,7 @@ services:
         value: 3000
       - key: NODE_ENV
         value: production
-      - key: SESSION_SECRET
+      - key: JWT_SECRET
         sync: false
       - key: CORS_ORIGIN
         sync: false

@@ -13,21 +13,19 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       setError(null);
-      const response = await api.get("/api/auth/status", {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUser(null);
+        return null;
+      }
 
-
-      console.log("Auth status response:", response.data);
-
+      const response = await api.get("/api/auth/status");
       if (response.data.authenticated && response.data.user) {
         setUser(response.data.user);
         return response.data.user;
       } else {
         setUser(null);
+        localStorage.removeItem("token");
         return null;
       }
     } catch (error) {
@@ -36,12 +34,12 @@ export const AuthProvider = ({ children }) => {
         error.response?.data?.message || "Failed to check authentication status"
       );
       setUser(null);
+      localStorage.removeItem("token");
       return null;
     } finally {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     checkAuthStatus();
@@ -51,7 +49,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await api.post("/api/auth/login", credentials);
-      await checkAuthStatus();
+      localStorage.setItem("token", response.data.token);
+      setUser(response.data.user);
       return response.data;
     } catch (error) {
       setError(error.response?.data?.message || "Login failed");
@@ -63,7 +62,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       const response = await api.post("/api/auth/register", userData);
-      await checkAuthStatus();
+      localStorage.setItem("token", response.data.token);
+      setUser(response.data.user);
       return response.data;
     } catch (error) {
       setError(error.response?.data?.message || "Registration failed");
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
-      await api.post("/api/auth/logout");
+      localStorage.removeItem("token");
       setUser(null);
       navigate("/login");
     } catch (error) {

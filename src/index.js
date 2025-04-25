@@ -12,6 +12,7 @@ const {
 } = require("./middleware/validation");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -26,15 +27,12 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: "https://ryan-job-trackers.netlify.app", // 🔥 Exact string!
+    origin: "https://ryan-job-trackers.netlify.app",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
-    exposedHeaders: ["Set-Cookie"],
-    maxAge: 86400,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
 
 app.use(express.json());
 
@@ -181,7 +179,7 @@ app.delete("/api/jobs/:id", isAuthenticated, async (req, res, next) => {
 app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
   try {
     const { email, password, name } = req.body;
-    console.log("Registration attempt:", { email, name }); // Don't log password
+    console.log("Registration attempt:", { email, name });
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -210,20 +208,21 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
       email: user.email,
     });
 
-    // Log in the user
-    req.login(user, (err) => {
-      if (err) {
-        console.error("Login after registration failed:", err);
-        return next(err);
-      }
-      res.json({
-        message: "Registration successful",
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-      });
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, name: user.name },
+      process.env.JWT_SECRET || "dev-secret",
+      { expiresIn: "24h" }
+    );
+
+    res.json({
+      message: "Registration successful",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
     });
   } catch (error) {
     console.error("Registration error:", error);
@@ -233,87 +232,39 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
 
 // Login
 app.post("/api/auth/login", (req, res, next) => {
-  console.log("Login attempt with body:", req.body); 
-
   passport.authenticate("local", (err, user, info) => {
     if (err) {
-      console.error("Auth error:", err);
       return next(err);
     }
-
     if (!user) {
-      console.log("Authentication failed:", info); 
-      return res.status(400).json({ error: info.message || "Login failed" });
+      return res.status(401).json({ error: info.message });
     }
 
-    req.login(user, (err) => {
-      if (err) {
-        console.error("Login error:", err);
-        return next(err);
-      }
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, name: user.name },
+      process.env.JWT_SECRET || "dev-secret",
+      { expiresIn: "24h" }
+    );
 
-      console.log("Login successful, user:", user);
-      console.log("Session:", req.session);
-      console.log("Session ID:", req.sessionID);
-
-      return res.json({
-        message: "Login successful",
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-      });
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
     });
   })(req, res, next);
 });
 
-
-// Logout route
-app.post("/api/auth/logout", (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      console.error("Logout error:", err);
-      return res.status(500).json({ error: "Error during logout" });
-    }
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Session destruction error:", err);
-        return res.status(500).json({ error: "Error destroying session" });
-      }
-      res.clearCookie("connect.sid");
-      res.json({ message: "Logout successful" });
-    });
-  });
-});
-
 // Check authentication status
-app.get("/api/auth/status", (req, res, next) => {
-  try {
-    console.log("Checking auth status");
-    console.log("Session:", req.session);
-    console.log("Session ID:", req.sessionID);
-    console.log("Cookies:", req.headers.cookie);
-    console.log("User:", req.user);
-    console.log("Is authenticated:", req.isAuthenticated());
-
-    const isAuthenticated = req.isAuthenticated();
-    const user = isAuthenticated
-      ? {
-          id: req.user.id,
-          email: req.user.email,
-          name: req.user.name,
-        }
-      : null;
-
-    res.json({
-      authenticated: isAuthenticated,
-      user,
-    });
-  } catch (error) {
-    console.error("Auth status error:", error);
-    next(error);
-  }
+app.get("/api/auth/status", isAuthenticated, (req, res) => {
+  res.json({
+    authenticated: true,
+    user: req.user,
+  });
 });
 
 // Error handling middleware
