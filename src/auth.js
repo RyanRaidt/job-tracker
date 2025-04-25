@@ -28,13 +28,13 @@ const configureAuth = (app) => {
       saveUninitialized: false, // ✅ Don’t save empty sessions
       cookie: {
         secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         httpOnly: true,
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production" ? ".netlify.app" : undefined,
+        // domain: ".netlify.app" ❌ removed — prevents cross-origin session use
       },
+
       name: "connect.sid",
     })
   );
