@@ -29,7 +29,7 @@ const configureAuth = (app) => {
       cookie: {
         secure: process.env.NODE_ENV === "production",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: "lax",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         httpOnly: true,
         path: "/",
       },
