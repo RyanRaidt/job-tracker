@@ -41,7 +41,7 @@ app.use(
   })
 );
 
-
+app.use(express.json());
 
 // Configure authentication
 const { isAuthenticated } = configureAuth(app);
