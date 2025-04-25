@@ -26,13 +26,7 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS Not Allowed: " + origin));
-      }
-    },
+    origin: "https://ryan-job-trackers.netlify.app", // 🔥 Exact string!
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
@@ -40,6 +34,7 @@ app.use(
     maxAge: 86400,
   })
 );
+
 
 app.use(express.json());
 
