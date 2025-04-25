@@ -1,12 +1,15 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  // In production, use the environment variable
+  if (import.meta.env.PROD) {
+    return (
+      import.meta.env.VITE_API_URL ||
+      "https://job-tracker-backend-vbji.onrender.com"
+    );
   }
-  return import.meta.env.DEV
-    ? "http://localhost:3000"
-    : "https://job-tracker-backend-vbji.onrender.com";
+  // In development, use localhost
+  return "http://localhost:3000";
 };
 
 const api = axios.create({
@@ -15,8 +18,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
 });
 
 // Add request interceptor to include credentials
@@ -35,8 +36,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized error
-      window.location.href = "/login";
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }

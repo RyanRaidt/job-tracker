@@ -104,8 +104,22 @@ const configureAuth = (app) => {
     if (req.isAuthenticated()) {
       return next();
     }
-    res.status(401).json({ error: "Authentication required" });
+    res.status(401).json({
+      error: "Authentication required",
+      message: "Please log in to access this resource",
+    });
   };
+
+  // Add error handling middleware for authentication failures
+  app.use((err, req, res, next) => {
+    if (err.name === "AuthenticationError") {
+      return res.status(401).json({
+        error: "Authentication failed",
+        message: err.message || "Invalid credentials",
+      });
+    }
+    next(err);
+  });
 
   return { isAuthenticated };
 };

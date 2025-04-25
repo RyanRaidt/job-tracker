@@ -14,13 +14,13 @@ import {
   Alert,
   AlertIcon,
   useToast,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import { useAuth } from "../context/AuthContext";
-import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const { checkAuthStatus } = useAuth();
+  const { login, register, error: authError } = useAuth();
   const { colorMode } = useColorMode();
   const cardBg = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
@@ -33,14 +33,27 @@ function Login() {
     password: "",
     name: "",
   });
-  const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (isSubmitting) {
-      navigate("/");
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
     }
-  }, [isSubmitting, navigate]);
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+    if (isRegistering && !formData.name) {
+      errors.name = "Name is required";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,20 +61,52 @@ function Login() {
       ...prev,
       [name]: value,
     }));
+    // Clear error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setIsSubmitting(true);
+    if (!validateForm()) {
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
-      const endpoint = isRegistering ? "/api/auth/register" : "/api/auth/login";
-      const response = await api.post(endpoint, formData);
-      await checkAuthStatus();
+      if (isRegistering) {
+        await register(formData);
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        await login(formData);
+        toast({
+          title: "Welcome back",
+          description: "You have been logged in successfully",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
       navigate("/");
     } catch (error) {
-      setError(error.response?.data?.error || "An error occurred");
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "An error occurred",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -81,17 +126,17 @@ function Login() {
             {isRegistering ? "Create Account" : "Sign In"}
           </Heading>
 
-          {error && (
+          {authError && (
             <Alert status="error" borderRadius="md">
               <AlertIcon />
-              {error}
+              {authError}
             </Alert>
           )}
 
           <form onSubmit={handleSubmit} style={{ width: "100%" }}>
             <VStack spacing={4}>
               {isRegistering && (
-                <FormControl isRequired>
+                <FormControl isRequired isInvalid={formErrors.name}>
                   <FormLabel>Name</FormLabel>
                   <Input
                     name="name"
@@ -99,10 +144,11 @@ function Login() {
                     onChange={handleChange}
                     placeholder="Enter your name"
                   />
+                  <FormErrorMessage>{formErrors.name}</FormErrorMessage>
                 </FormControl>
               )}
 
-              <FormControl isRequired>
+              <FormControl isRequired isInvalid={formErrors.email}>
                 <FormLabel>Email</FormLabel>
                 <Input
                   type="email"
@@ -112,9 +158,10 @@ function Login() {
                   placeholder="Enter your email"
                   autoComplete="email"
                 />
+                <FormErrorMessage>{formErrors.email}</FormErrorMessage>
               </FormControl>
 
-              <FormControl isRequired>
+              <FormControl isRequired isInvalid={formErrors.password}>
                 <FormLabel>Password</FormLabel>
                 <Input
                   type="password"
@@ -126,6 +173,7 @@ function Login() {
                     isRegistering ? "new-password" : "current-password"
                   }
                 />
+                <FormErrorMessage>{formErrors.password}</FormErrorMessage>
               </FormControl>
 
               <Button

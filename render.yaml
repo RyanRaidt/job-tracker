@@ -11,6 +11,10 @@ services:
         value: 3000
       - key: NODE_ENV
         value: production
+      - key: SESSION_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
       - key: LINKEDIN_CLIENT_ID
         sync: false
       - key: LINKEDIN_CLIENT_SECRET

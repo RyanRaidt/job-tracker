@@ -18,34 +18,26 @@ const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 
 // CORS configuration
-const allowedOrigins = [
-  "https://ryan-job-trackers.netlify.app",
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? [process.env.CORS_ORIGIN]
+  : [
+      "https://ryan-job-trackers.netlify.app",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) === -1) {
-        console.log("Blocked by CORS:", origin);
-        const msg =
-          "The CORS policy for this site does not allow access from the specified Origin.";
-        return callback(new Error(msg), false);
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
       }
-      console.log("Allowed by CORS:", origin);
-      return callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
-    exposedHeaders: ["set-cookie"],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    maxAge: 86400, // 24 hours
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());
@@ -248,8 +240,6 @@ app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
   console.log("Login successful, user:", req.user);
   console.log("Session:", req.session);
   console.log("Session ID:", req.sessionID);
-  console.log("Cookies:", req.headers.cookie);
-
   res.json({
     message: "Login successful",
     user: {
@@ -257,6 +247,24 @@ app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
       email: req.user.email,
       name: req.user.name,
     },
+  });
+});
+
+// Logout route
+app.post("/api/auth/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ error: "Error during logout" });
+    }
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Session destruction error:", err);
+        return res.status(500).json({ error: "Error destroying session" });
+      }
+      res.clearCookie("connect.sid");
+      res.json({ message: "Logout successful" });
+    });
   });
 });
 
@@ -287,16 +295,6 @@ app.get("/api/auth/status", (req, res, next) => {
     console.error("Auth status error:", error);
     next(error);
   }
-});
-
-// Logout
-app.post("/api/auth/logout", (req, res, next) => {
-  req.logout(function (err) {
-    if (err) {
-      return next(err);
-    }
-    res.json({ message: "Logged out successfully" });
-  });
 });
 
 // Error handling middleware
