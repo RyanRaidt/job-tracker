@@ -8,10 +8,8 @@ const configureAuth = require("./auth");
 const errorHandler = require("./middleware/errorHandler");
 const {
   validateJobApplication,
-  validateLinkedInUrl,
   validateRegistration,
 } = require("./middleware/validation");
-const { linkedInLimiter } = require("./middleware/rateLimiter");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
 
@@ -172,49 +170,6 @@ app.delete("/api/jobs/:id", isAuthenticated, async (req, res, next) => {
     next(error);
   }
 });
-
-// Scrape LinkedIn job data
-app.post(
-  "/api/scrape-linkedin",
-  isAuthenticated,
-  linkedInLimiter,
-  validateLinkedInUrl,
-  async (req, res, next) => {
-    try {
-      const { url } = req.body;
-      const accessToken = req.user.accessToken;
-
-      // First, get the job ID from the URL
-      const jobId = url.split("/").pop();
-
-      // Use LinkedIn API to get job details
-      const response = await axios.get(
-        `https://api.linkedin.com/v2/jobs/${jobId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "X-Restli-Protocol-Version": "2.0.0",
-          },
-        }
-      );
-
-      const jobData = {
-        company: response.data.company.name,
-        position: response.data.title,
-        location: response.data.location,
-        url: url,
-        notes: `Scraped from LinkedIn - ${response.data.description.substring(
-          0,
-          200
-        )}...`,
-      };
-
-      res.json(jobData);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 
 // Register new user
 app.post("/api/auth/register", validateRegistration, async (req, res, next) => {

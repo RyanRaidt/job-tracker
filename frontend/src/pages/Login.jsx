@@ -15,13 +15,12 @@ import {
   AlertIcon,
   useToast,
 } from "@chakra-ui/react";
-import { FaLinkedin } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const { login: linkedInLogin, checkAuthStatus } = useAuth();
+  const { checkAuthStatus } = useAuth();
   const { colorMode } = useColorMode();
   const cardBg = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
@@ -43,39 +42,6 @@ function Login() {
     }
   }, [isSubmitting, navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsSubmitting(true);
-
-    try {
-      if (isRegistering) {
-        const response = await api.post("/api/auth/register", formData);
-        if (response.data.user) {
-          toast({
-            title: "Registration successful",
-            status: "success",
-            duration: 3000,
-          });
-          await checkAuthStatus(); // Check auth status after registration
-        }
-      } else {
-        const response = await api.post("/api/auth/login", formData);
-        if (response.data.user) {
-          toast({
-            title: "Login successful",
-            status: "success",
-            duration: 3000,
-          });
-          await checkAuthStatus(); // Check auth status after login
-        }
-      }
-    } catch (error) {
-      setIsSubmitting(false);
-      setError(error.response?.data?.error || "An error occurred");
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -84,8 +50,24 @@ function Login() {
     }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const endpoint = isRegistering ? "/api/auth/register" : "/api/auth/login";
+      const response = await api.post(endpoint, formData);
+      await checkAuthStatus();
+      navigate("/");
+    } catch (error) {
+      setError(error.response?.data?.error || "An error occurred");
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <Container maxW="container.sm" py={20}>
+    <Container maxW="container.sm" py={8}>
       <Box
         bg={cardBg}
         p={8}
@@ -95,12 +77,9 @@ function Login() {
         borderColor={borderColor}
       >
         <VStack spacing={6}>
-          <Heading size="lg">Welcome to Job Tracker</Heading>
-          <Text textAlign="center" color="gray.600">
-            {isRegistering
-              ? "Create an account to manage your job applications"
-              : "Sign in to manage your job applications"}
-          </Text>
+          <Heading size="lg">
+            {isRegistering ? "Create Account" : "Sign In"}
+          </Heading>
 
           {error && (
             <Alert status="error" borderRadius="md">
@@ -170,18 +149,6 @@ function Login() {
             {isRegistering
               ? "Already have an account? Sign in"
               : "Don't have an account? Register"}
-          </Button>
-
-          <Divider />
-
-          <Button
-            leftIcon={<FaLinkedin />}
-            colorScheme="linkedin"
-            size="lg"
-            onClick={linkedInLogin}
-            w="full"
-          >
-            Sign in with LinkedIn
           </Button>
         </VStack>
       </Box>

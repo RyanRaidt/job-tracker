@@ -14,12 +14,20 @@ app.use(
   cors({
     origin: "https://ryan-job-trackers.netlify.app",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Cookie",
+    ],
+    exposedHeaders: ["Set-Cookie", "Cookie"],
     credentials: true,
-    exposedHeaders: ["Set-Cookie"],
-    maxAge: 86400, // 24 hours
+    maxAge: 86400,
   })
 );
+
+// Add cookie parser middleware
+app.use(require("cookie-parser")());
 
 // Session middleware
 app.use(

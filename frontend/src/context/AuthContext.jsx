@@ -28,10 +28,6 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const login = () => {
-    window.location.href = "/auth/linkedin";
-  };
-
   const logout = async () => {
     try {
       await api.post("/api/auth/logout");
@@ -46,9 +42,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, logout, checkAuthStatus }}
-    >
+    <AuthContext.Provider value={{ user, loading, logout, checkAuthStatus }}>
       {children}
     </AuthContext.Provider>
   );
