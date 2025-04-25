@@ -24,16 +24,17 @@ const configureAuth = (app) => {
         createTableIfMissing: true,
       }),
       secret: process.env.SESSION_SECRET || "dev-secret",
-      resave: true,
-      saveUninitialized: true,
+      resave: false,
+      saveUninitialized: false,
       cookie: {
-        secure: true,
+        secure: true, // Always true in production
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: "none",
+        sameSite: "none", // Required for cross-site cookies in production
         httpOnly: true,
         path: "/",
+        domain: ".netlify.app", // Add your domain
       },
-      name: "connect.sid", // Explicitly set the cookie name
+      name: "connect.sid",
     })
   );
 

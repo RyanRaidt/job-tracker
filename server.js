@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const errorHandler = require("./src/middleware/errorHandler");
+const session = require("express-session");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -13,7 +14,25 @@ app.use(
   cors({
     origin: "https://ryan-job-trackers.netlify.app",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true,
+    exposedHeaders: ["Set-Cookie"],
+    maxAge: 86400, // 24 hours
+  })
+);
+
+// Session middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
   })
 );
 
