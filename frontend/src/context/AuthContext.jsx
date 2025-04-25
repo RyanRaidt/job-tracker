@@ -13,8 +13,12 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       setError(null);
-      const response = await api.get("/api/auth/status");
+      const response = await api.get("/api/auth/status", {
+        withCredentials: true, // ✅ Critical to send session cookie
+      });
+
       console.log("Auth status response:", response.data);
+
       if (response.data.authenticated && response.data.user) {
         setUser(response.data.user);
         return response.data.user;
@@ -33,6 +37,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     checkAuthStatus();
