@@ -21,21 +21,24 @@ const configureAuth = (app) => {
         pool,
         tableName: "session",
         createTableIfMissing: true,
-        pruneSessionInterval: 60, // Prune expired sessions every 60 seconds
+        pruneSessionInterval: 60,
       }),
       secret: process.env.SESSION_SECRET || "dev-secret",
-      resave: false,
-      saveUninitialized: false,
+      resave: false, // ✅ Only save if something has changed
+      saveUninitialized: false, // ✅ Don’t save empty sessions
       cookie: {
         secure: process.env.NODE_ENV === "production",
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: 24 * 60 * 60 * 1000,
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         httpOnly: true,
         path: "/",
+        domain:
+          process.env.NODE_ENV === "production" ? ".netlify.app" : undefined,
       },
       name: "connect.sid",
     })
   );
+
 
   // Initialize Passport
   app.use(passport.initialize());
@@ -47,6 +50,7 @@ const configureAuth = (app) => {
       sessionID: req.sessionID,
       session: req.session,
       cookies: req.cookies,
+      headers: req.headers,
       isAuthenticated: req.isAuthenticated(),
     });
     next();
