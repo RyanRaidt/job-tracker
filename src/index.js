@@ -237,19 +237,42 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
 });
 
 // Login
-app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {
-  console.log("Login successful, user:", req.user);
-  console.log("Session:", req.session);
-  console.log("Session ID:", req.sessionID);
-  res.json({
-    message: "Login successful",
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      name: req.user.name,
-    },
-  });
+app.post("/api/auth/login", (req, res, next) => {
+  console.log("Login attempt with body:", req.body); 
+
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      console.error("Auth error:", err);
+      return next(err);
+    }
+
+    if (!user) {
+      console.log("Authentication failed:", info); 
+      return res.status(400).json({ error: info.message || "Login failed" });
+    }
+
+    req.login(user, (err) => {
+      if (err) {
+        console.error("Login error:", err);
+        return next(err);
+      }
+
+      console.log("Login successful, user:", user);
+      console.log("Session:", req.session);
+      console.log("Session ID:", req.sessionID);
+
+      return res.json({
+        message: "Login successful",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      });
+    });
+  })(req, res, next);
 });
+
 
 // Logout route
 app.post("/api/auth/logout", (req, res) => {
