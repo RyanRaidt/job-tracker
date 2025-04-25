@@ -1,9 +1,16 @@
 import axios from "axios";
 
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  return import.meta.env.DEV
+    ? "http://localhost:3000"
+    : "https://job-tracker-backend-vbji.onrender.com";
+};
+
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "https://job-tracker-backend-vbji.onrender.com",
+  baseURL: getBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },

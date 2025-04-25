@@ -24,18 +24,16 @@ const configureAuth = (app) => {
         pruneSessionInterval: 60, // Prune expired sessions every 60 seconds
       }),
       secret: process.env.SESSION_SECRET || "dev-secret",
-      resave: true, // Changed to true to ensure session is saved
-      saveUninitialized: true, // Changed to true to save new sessions
+      resave: false,
+      saveUninitialized: false,
       cookie: {
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: "none",
+        sameSite: "lax",
         httpOnly: true,
         path: "/",
-        domain: ".netlify.app",
       },
       name: "connect.sid",
-      rolling: true, // Extend session lifetime on activity
     })
   );
 
