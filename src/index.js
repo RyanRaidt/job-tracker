@@ -4,15 +4,14 @@ const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const configureAuth = require("./auth");
 const errorHandler = require("./middleware/errorHandler");
 const {
   validateJobApplication,
   validateRegistration,
 } = require("./middleware/validation");
 const bcrypt = require("bcrypt");
-const passport = require("passport");
 const jwt = require("jsonwebtoken");
+const { isAuthenticated } = require("./auth");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -39,11 +38,7 @@ app.options("*", (req, res) => {
   res.sendStatus(204);
 });
 
-
 app.use(express.json());
-
-// Configure authentication
-const { isAuthenticated } = configureAuth(app);
 
 // Get all job applications
 app.get("/api/jobs", isAuthenticated, async (req, res, next) => {
@@ -187,20 +182,14 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
     const { email, password, name } = req.body;
     console.log("Registration attempt:", { email, name });
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       console.log("User already exists:", email);
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
@@ -209,12 +198,8 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
       },
     });
 
-    console.log("User created successfully:", {
-      id: user.id,
-      email: user.email,
-    });
+    console.log("User created successfully:", { id: user.id, email: user.email });
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name },
       process.env.JWT_SECRET || "dev-secret",
@@ -236,24 +221,28 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
   }
 });
 
-// Login
-app.post("/api/auth/login", (req, res, next) => {
-  console.log("Login attempt:", { email: req.body.email });
+// Login user 
+app.post("/api/auth/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    console.log("Login attempt:", { email });
 
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      console.error("Login error:", err);
-      return next(err);
-    }
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      console.log("Login failed:", info.message);
       return res.status(401).json({
         error: "Authentication failed",
-        message: info.message || "Invalid credentials",
+        message: "Invalid email or password",
       });
     }
 
-    // Generate JWT token
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      return res.status(401).json({
+        error: "Authentication failed",
+        message: "Invalid email or password",
+      });
+    }
+
     const token = jwt.sign(
       { id: user.id, email: user.email, name: user.name },
       process.env.JWT_SECRET || "dev-secret",
@@ -271,7 +260,10 @@ app.post("/api/auth/login", (req, res, next) => {
         name: user.name,
       },
     });
-  })(req, res, next);
+  } catch (error) {
+    console.error("Login error:", error);
+    next(error);
+  }
 });
 
 // Check authentication status
@@ -285,6 +277,7 @@ app.get("/api/auth/status", isAuthenticated, (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

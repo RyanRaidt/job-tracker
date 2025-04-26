@@ -19,7 +19,12 @@ export const AuthProvider = ({ children }) => {
         return null;
       }
 
-      const response = await api.get("/api/auth/status");
+      const response = await api.get("/api/auth/status", {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✨ Add the token here
+        },
+      });
+
       if (response.data.authenticated && response.data.user) {
         setUser(response.data.user);
         return response.data.user;
@@ -40,6 +45,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     checkAuthStatus();
