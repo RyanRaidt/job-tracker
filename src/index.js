@@ -17,6 +17,10 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
+//  Health check route FIRST
+app.get("/api/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
 // CORS configuration
 app.use(
