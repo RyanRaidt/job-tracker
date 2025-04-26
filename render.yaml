@@ -15,9 +15,3 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
-      - key: LINKEDIN_CLIENT_ID
-        sync: false
-      - key: LINKEDIN_CLIENT_SECRET
-        sync: false
-      - key: LINKEDIN_CALLBACK_URL
-        sync: false

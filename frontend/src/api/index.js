@@ -1,12 +1,10 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  // In development, use localhost
   if (import.meta.env.DEV) {
-    return "http://localhost:3000";
+    return "http://localhost:3000"; // Development
   }
-  // In production, use the Render URL
-  return "https://job-tracker-api.onrender.com";
+  return "https://job-tracker-backend-vbji.onrender.com"; // Production
 };
 
 const api = axios.create({
@@ -30,12 +28,11 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle errors
+// Add response interceptor to handle 401
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
       localStorage.removeItem("token");
       if (!window.location.pathname.includes("/login")) {
         window.location.href = "/login";
