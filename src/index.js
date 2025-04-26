@@ -27,7 +27,17 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: "https://ryan-job-trackers.netlify.app",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg =
+          "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -232,12 +242,19 @@ app.post("/api/auth/register", validateRegistration, async (req, res, next) => {
 
 // Login
 app.post("/api/auth/login", (req, res, next) => {
+  console.log("Login attempt:", { email: req.body.email });
+
   passport.authenticate("local", (err, user, info) => {
     if (err) {
+      console.error("Login error:", err);
       return next(err);
     }
     if (!user) {
-      return res.status(401).json({ error: info.message });
+      console.log("Login failed:", info.message);
+      return res.status(401).json({
+        error: "Authentication failed",
+        message: info.message || "Invalid credentials",
+      });
     }
 
     // Generate JWT token
@@ -246,6 +263,8 @@ app.post("/api/auth/login", (req, res, next) => {
       process.env.JWT_SECRET || "dev-secret",
       { expiresIn: "24h" }
     );
+
+    console.log("Login successful:", { email: user.email, id: user.id });
 
     res.json({
       message: "Login successful",

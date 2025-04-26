@@ -1,12 +1,12 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  // In production, use the environment variable
-  if (import.meta.env.PROD) {
-    return "https://job-tracker-api.onrender.com";
-  }
   // In development, use localhost
-  return "http://localhost:3000";
+  if (import.meta.env.DEV) {
+    return "http://localhost:3000";
+  }
+  // In production, use the Render URL
+  return "https://job-tracker-api.onrender.com";
 };
 
 const api = axios.create({
