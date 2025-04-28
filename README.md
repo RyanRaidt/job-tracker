@@ -206,7 +206,6 @@ The application should now be running at:
 4. Push to the branch
 5. Create a Pull Request
 
-Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ## Support
 
