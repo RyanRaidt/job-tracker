@@ -6,8 +6,9 @@ import Dashboard from "./pages/Dashboard";
 import JobForm from "./pages/JobForm";
 import JobDetails from "./pages/JobDetails";
 import Login from "./pages/Login";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
 
 const theme = extendTheme({
   colors: {
@@ -96,46 +97,60 @@ function App() {
           <Router {...router}>
             <AuthProvider>
               <Navbar />
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/jobs/new"
-                  element={
-                    <ProtectedRoute>
-                      <JobForm />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/jobs/:id"
-                  element={
-                    <ProtectedRoute>
-                      <JobDetails />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/jobs/:id/edit"
-                  element={
-                    <ProtectedRoute>
-                      <JobForm />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
+              <AppRoutes />
             </AuthProvider>
           </Router>
         </QueryClientProvider>
       </ChakraProvider>
     </>
+  );
+}
+
+function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) return null; // Or a spinner
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/"
+        element={
+          user ? (
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          ) : (
+            <Home />
+          )
+        }
+      />
+      <Route
+        path="/jobs/new"
+        element={
+          <ProtectedRoute>
+            <JobForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs/:id"
+        element={
+          <ProtectedRoute>
+            <JobDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs/:id/edit"
+        element={
+          <ProtectedRoute>
+            <JobForm />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 
