@@ -24,6 +24,8 @@ function Login() {
   const { colorMode } = useColorMode();
   const cardBg = colorMode === "light" ? "white" : "gray.800";
   const borderColor = colorMode === "light" ? "gray.200" : "gray.700";
+  const textColor = colorMode === "light" ? "gray.800" : "whiteAlpha.900";
+  const inputBg = colorMode === "light" ? "white" : "gray.700";
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -122,7 +124,7 @@ function Login() {
         borderColor={borderColor}
       >
         <VStack spacing={6}>
-          <Heading size="lg">
+          <Heading size="lg" color={textColor}>
             {isRegistering ? "Create Account" : "Sign In"}
           </Heading>
 
@@ -137,19 +139,26 @@ function Login() {
             <VStack spacing={4}>
               {isRegistering && (
                 <FormControl isRequired isInvalid={formErrors.name}>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel color={textColor}>Name</FormLabel>
                   <Input
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Enter your name"
+                    bg={inputBg}
+                    borderColor={borderColor}
+                    _hover={{ borderColor: "brand.400" }}
+                    _focus={{
+                      borderColor: "brand.500",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+                    }}
                   />
                   <FormErrorMessage>{formErrors.name}</FormErrorMessage>
                 </FormControl>
               )}
 
               <FormControl isRequired isInvalid={formErrors.email}>
-                <FormLabel>Email</FormLabel>
+                <FormLabel color={textColor}>Email</FormLabel>
                 <Input
                   type="email"
                   name="email"
@@ -157,12 +166,19 @@ function Login() {
                   onChange={handleChange}
                   placeholder="Enter your email"
                   autoComplete="email"
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  _hover={{ borderColor: "brand.400" }}
+                  _focus={{
+                    borderColor: "brand.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+                  }}
                 />
                 <FormErrorMessage>{formErrors.email}</FormErrorMessage>
               </FormControl>
 
               <FormControl isRequired isInvalid={formErrors.password}>
-                <FormLabel>Password</FormLabel>
+                <FormLabel color={textColor}>Password</FormLabel>
                 <Input
                   type="password"
                   name="password"
@@ -172,6 +188,13 @@ function Login() {
                   autoComplete={
                     isRegistering ? "new-password" : "current-password"
                   }
+                  bg={inputBg}
+                  borderColor={borderColor}
+                  _hover={{ borderColor: "brand.400" }}
+                  _focus={{
+                    borderColor: "brand.500",
+                    boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+                  }}
                 />
                 <FormErrorMessage>{formErrors.password}</FormErrorMessage>
               </FormControl>
@@ -193,6 +216,8 @@ function Login() {
           <Button
             variant="ghost"
             onClick={() => setIsRegistering(!isRegistering)}
+            color={textColor}
+            _hover={{ bg: colorMode === "light" ? "gray.100" : "gray.700" }}
           >
             {isRegistering
               ? "Already have an account? Sign in"
